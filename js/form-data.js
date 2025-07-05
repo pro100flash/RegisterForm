@@ -1,6 +1,17 @@
 // Конфигурация: URL Web App для Google Sheets
 // Замени YOUR_WEB_APP_URL на реальный URL перед деплоем (например, https://script.google.com/macros/s/XYZ789/exec)
 // Не коммить этот файл с реальным URL в публичный репозиторий!
+document.querySelector("form.registration-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = {
+    name: document.querySelector("#name").value,
+    surname: document.querySelector("#surname").value,
+    email: document.querySelector("#email").value,
+    phone: document.querySelector("#phone").value,
+  };
+  await window.sendToGoogleSheet(formData);
+});
+
 const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwzRRVhdQ7fO5dCNCi5H4gSdaxxFH5L1O13_0Z613Dp63fkFsj_Obsmgg9fxaon_Jhp2g/exec";
 
 // Проверка конфигурации
