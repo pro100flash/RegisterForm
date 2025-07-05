@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Находим все формы на странице
   const forms = document.querySelectorAll("form.registration-form");
 
   forms.forEach((form) => {
@@ -8,127 +7,81 @@ document.addEventListener("DOMContentLoaded", function () {
     const lastNameInput = form.querySelector("input[name='lastName']");
     const emailInput = form.querySelector("input[name='email']");
 
-    // Инициализируем intl-tel-input
     const iti = window.intlTelInput(phoneInput, {
       initialCountry: "ua",
       preferredCountries: ["ru", "ua", "pl", "us"],
       utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/js/utils.js",
     });
 
-    // Функция валидации поля (Имя/Фамилия)
-    function validateName(input, fieldName) {
-      const nameRegex = /^[a-zA-Zа-яА-ЯёЁ]+$/;
-      if (!input.value) {
-        input.setCustomValidity(`${fieldName} обязательно`);
-      } else if (input.value.length < 2) {
-        input.setCustomValidity(`${fieldName} должно быть не короче 2 символов`);
-      } else if (!nameRegex.test(input.value)) {
-        input.setCustomValidity(`${fieldName} должно содержать только буквы`);
-      } else {
-        input.setCustomValidity(""); // Очищаем ошибку
-      }
-    }
+    const validateName = (input, fieldName) => {
+      const regex = /^[a-zA-Zа-яА-ЯёЁіІїЇґҐ\-ʼ’]+$/;
+      if (!input.value) input.setCustomValidity(`${fieldName} обязательно`);
+      else if (input.value.length < 2) input.setCustomValidity(`${fieldName} должно быть не короче 2 символов`);
+      else if (!regex.test(input.value)) input.setCustomValidity(`${fieldName} должно содержать только буквы`);
+      else input.setCustomValidity("");
+    };
 
-    // Валидация при вводе (для показа тултипов в реальном времени)
+    const validateEmail = () => {
+      if (!emailInput.value) emailInput.setCustomValidity("Email обязателен");
+      else if (!emailInput.checkValidity()) emailInput.setCustomValidity("Введите корректный email");
+      else emailInput.setCustomValidity("");
+    };
+
+    const validatePhone = () => {
+      if (!iti.isValidNumber()) phoneInput.setCustomValidity("Введите корректный номер телефона");
+      else phoneInput.setCustomValidity("");
+    };
+
     firstNameInput.addEventListener("input", () => validateName(firstNameInput, "Имя"));
     lastNameInput.addEventListener("input", () => validateName(lastNameInput, "Фамилия"));
+    emailInput.addEventListener("input", validateEmail);
+    phoneInput.addEventListener("input", validatePhone);
 
-    // Валидация email при вводе
-    emailInput.addEventListener("input", () => {
-      if (!emailInput.value) {
-        emailInput.setCustomValidity("Email обязателен");
-      } else if (!emailInput.checkValidity()) {
-        emailInput.setCustomValidity("Введите корректный email");
-      } else {
-        emailInput.setCustomValidity("");
-      }
-    });
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    // Валидация телефона при вводе
-    phoneInput.addEventListener("input", () => {
-      if (!iti.isValidNumber()) {
-        phoneInput.setCustomValidity("Введите корректный номер телефона");
-      } else {
-        phoneInput.setCustomValidity("");
-      }
-    });
-
-    form.addEventListener("submit", function (e) {
-      e.preventDefault(); // Отменяем стандартную отправку
-
-      // Явная валидация всех полей
       validateName(firstNameInput, "Имя");
       validateName(lastNameInput, "Фамилия");
+      validateEmail();
+      validatePhone();
 
-      if (!emailInput.value) {
-        emailInput.setCustomValidity("Email обязателен");
-      } else if (!emailInput.checkValidity()) {
-        emailInput.setCustomValidity("Введите корректный email");
-      } else {
-        emailInput.setCustomValidity("");
-      }
-
-      if (!iti.isValidNumber()) {
-        phoneInput.setCustomValidity("Введите корректный номер телефона");
-      } else {
-        phoneInput.setCustomValidity("");
-      }
-
-      // Проверка валидности формы
       if (!form.checkValidity()) {
-        form.reportValidity(); // Показываем браузерные тултипы
+        form.reportValidity();
         return;
       }
 
-      // Получаем форматированный номер телефона
-      const phoneNumber = iti.getNumber();
-
-      // Собираем данные формы
       const data = {
-        firstName: form.firstName.value,
-        lastName: form.lastName.value,
-        email: form.email.value,
-        phone: phoneNumber,
+        firstName: firstNameInput.value.trim(),
+        lastName: lastNameInput.value.trim(),
+        email: emailInput.value.trim(),
+        phone: iti.getNumber(),
       };
 
-      // Получаем URL Google Sheets из атрибута формы
-      const sheetUrl = form.dataset.sheetUrl;
-
-      if (sheetUrl) {
-        // Отправляем данные в Google Sheets
-        fetch(sheetUrl, {
+      try {
+        const res = await fetch(GOOGLE_SHEET_URL, {
           method: "POST",
           body: JSON.stringify(data),
           headers: {
             "Content-Type": "application/json",
           },
-        })
-          .then((res) => res.text())
-          .then(() => {
-            alert("Данные успешно отправлены в Google Sheets!");
-            form.reset();
-            iti.setNumber(""); // Сбрасываем поле телефона
-            // Очищаем сообщения об ошибках
-            firstNameInput.setCustomValidity("");
-            lastNameInput.setCustomValidity("");
-            emailInput.setCustomValidity("");
-            phoneInput.setCustomValidity("");
-          })
-          .catch((err) => {
-            console.error(err);
-            alert("Ошибка при отправке данных");
-          });
-      } else {
-        // Если URL не указан, показываем данные в консоли
-        console.log("Данные формы:", data);
-        alert("Форма валидна, но URL Google Sheets не указан!");
+        });
+
+        const text = await res.text();
+        if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+
+        console.log("Ответ от Google Sheets:", text);
+        alert("Данные успешно отправлены!");
+
         form.reset();
         iti.setNumber("");
-        // Очищаем сообщения об ошибках
-        firstNameInput.setCustomValidity("");
-        lastNameInput.setCustomValidity("");
-        emailInput.setCustomValidity("");
-        phoneInput.setCustomValidity("");
+
+        [firstNameInput, lastNameInput, emailInput, phoneInput].forEach((i) =>
+          i.setCustomValidity("")
+        );
+
+      } catch (err) {
+        console.error("Ошибка при отправке:", err);
+        alert("Ошибка при отправке данных. Проверь консоль.");
       }
     });
   });
