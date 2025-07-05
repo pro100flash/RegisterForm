@@ -13,9 +13,33 @@ document.addEventListener("DOMContentLoaded", () => {
       utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/js/utils.js",
     });
 
-    // твої функції валідації: validateName, validateEmail, validatePhone
-    // ...
+    // Функції валідації
+    function validateName(input, fieldName) {
+      const regex = /^[a-zA-Zа-яА-ЯёЁіІїЇґҐ\-ʼ’]+$/;
+      if (!input.value) input.setCustomValidity(`${fieldName} обязательно`);
+      else if (input.value.length < 2) input.setCustomValidity(`${fieldName} должно быть не короче 2 символов`);
+      else if (!regex.test(input.value)) input.setCustomValidity(`${fieldName} должно содержать только буквы`);
+      else input.setCustomValidity("");
+    }
 
+    function validateEmail() {
+      if (!emailInput.value) emailInput.setCustomValidity("Email обязателен");
+      else if (!emailInput.checkValidity()) emailInput.setCustomValidity("Введите корректный email");
+      else emailInput.setCustomValidity("");
+    }
+
+    function validatePhone() {
+      if (!iti.isValidNumber()) phoneInput.setCustomValidity("Введите корректный номер телефона");
+      else phoneInput.setCustomValidity("");
+    }
+
+    // Слухачі подій вводу
+    firstNameInput.addEventListener("input", () => validateName(firstNameInput, "Имя"));
+    lastNameInput.addEventListener("input", () => validateName(lastNameInput, "Фамилия"));
+    emailInput.addEventListener("input", validateEmail);
+    phoneInput.addEventListener("input", validatePhone);
+
+    // Обробник сабміту
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       console.log("Submit fired");
