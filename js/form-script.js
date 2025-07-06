@@ -1,6 +1,6 @@
 // form-script.js
 document.addEventListener("DOMContentLoaded", () => {
-  const forms = document.querySelectorAll("form.registration-form");
+  const forms = document.querySelectorAll("#regForm");
 
   forms.forEach((form) => {
     const phoneInput = form.querySelector("input[type='tel']");
