@@ -1,3 +1,4 @@
+// form-script.js
 document.addEventListener("DOMContentLoaded", () => {
   const forms = document.querySelectorAll("form.registration-form");
 
@@ -10,32 +11,43 @@ document.addEventListener("DOMContentLoaded", () => {
     const iti = window.intlTelInput(phoneInput, {
       initialCountry: "ua",
       preferredCountries: ["ru", "ua", "pl", "us"],
-      utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/js/utils.js",
+      utilsScript:
+        "https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/js/utils.js",
     });
 
     // Функції валідації
     function validateName(input, fieldName) {
       const regex = /^[a-zA-Zа-яА-ЯёЁіІїЇґҐ\-ʼ’]+$/;
       if (!input.value) input.setCustomValidity(`${fieldName} обязательно`);
-      else if (input.value.length < 2) input.setCustomValidity(`${fieldName} должно быть не короче 2 символов`);
-      else if (!regex.test(input.value)) input.setCustomValidity(`${fieldName} должно содержать только буквы`);
+      else if (input.value.length < 2)
+        input.setCustomValidity(
+          `${fieldName} должно быть не короче 2 символов`
+        );
+      else if (!regex.test(input.value))
+        input.setCustomValidity(`${fieldName} должно содержать только буквы`);
       else input.setCustomValidity("");
     }
 
     function validateEmail() {
       if (!emailInput.value) emailInput.setCustomValidity("Email обязателен");
-      else if (!emailInput.checkValidity()) emailInput.setCustomValidity("Введите корректный email");
+      else if (!emailInput.checkValidity())
+        emailInput.setCustomValidity("Введите корректный email");
       else emailInput.setCustomValidity("");
     }
 
     function validatePhone() {
-      if (!iti.isValidNumber()) phoneInput.setCustomValidity("Введите корректный номер телефона");
+      if (!iti.isValidNumber())
+        phoneInput.setCustomValidity("Введите корректный номер телефона");
       else phoneInput.setCustomValidity("");
     }
 
     // Слухачі подій вводу
-    firstNameInput.addEventListener("input", () => validateName(firstNameInput, "Имя"));
-    lastNameInput.addEventListener("input", () => validateName(lastNameInput, "Фамилия"));
+    firstNameInput.addEventListener("input", () =>
+      validateName(firstNameInput, "Имя")
+    );
+    lastNameInput.addEventListener("input", () =>
+      validateName(lastNameInput, "Фамилия")
+    );
     emailInput.addEventListener("input", validateEmail);
     phoneInput.addEventListener("input", validatePhone);
 
@@ -79,10 +91,9 @@ document.addEventListener("DOMContentLoaded", () => {
         form.reset();
         iti.setNumber("");
 
-        [firstNameInput, lastNameInput, emailInput, phoneInput].forEach(i =>
+        [firstNameInput, lastNameInput, emailInput, phoneInput].forEach((i) =>
           i.setCustomValidity("")
         );
-
       } catch (err) {
         console.error("Ошибка при отправке:", err);
         alert("Ошибка при отправке данных. Проверь консоль.");
